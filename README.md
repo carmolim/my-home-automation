@@ -24,9 +24,9 @@ I'm also going to use other hardware widely used in the IoT world like:
 
 I started configuring my Raspberry Pi, I had one with me for a time but I never did a thing with it, so I had no clue where to start. I will list the steps I did in my setup:
 
-1. **Download the Rapien image [here](https://www.raspberrypi.org/downloads/raspbian/)**
+1. **Download the Raspbian Jessie image [here](https://www.raspberrypi.org/downloads/raspbian/)**
 
-	- I went with the full version of Jessie because I'll use the ```GUI``` later for my data visualisations		
+	- I went with the full version of Jessie because I'll use the ```GUI``` later for my data visualisations. An 8G SD card is recommended!		
 	 
 2. **Setup the MicroSD Card to the RaspberryPi**
 
