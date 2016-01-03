@@ -2,12 +2,13 @@
 
     MQTT Sensor example v 0.1
 
-    This sketch demonstrates how to keep the client connected
-    using a non-blocking reconnect function. If the client loses
-    its connection, it attempts to reconnect every 5 seconds
-    without blocking the main loop.
+    This sketch demonstrates how to send the temeperature readings 
+    of the DS18B20 temperature sensor to the MQTT broker installed
+    in the Raspberry Pi. The Home Assistant will reade the sent 
+    message and than will update the UI with the just received 
+    reading.
     
-    Home Assistant Component
+    MQTT Sensor Component:
     https://home-assistant.io/components/sensor.mqtt/
 */
 
@@ -22,8 +23,8 @@
 const String nodeName       = "spark_01";                       // name of this node
 const String publishTopic   = "home/livingroom/temperature";    // the topic where you will publish the temperature
 const String debugTopic     = "home/debug";                     // this topic is just for debugging
-long _next_time_to_sample = millis();                           // currently time
-const int loopInterval = 2000;                                  // define how many miliseconds until the nest reading
+long _next_time_to_sample   = millis();                         // currently time
+const int loopInterval      = 2000;                             // define how many miliseconds until the nest reading
 
 
 //============================================================
@@ -44,11 +45,14 @@ int temperatureSamplesStep   = 0;                               // index of the 
 float averageTemperature     = 0;                               // currently temperature average
 float lastAverageTemperature = 0;                               // the last temoerature average sent 
 float temperatureDifference  = 0.0;                             // the difference between the currently temperature and the last reading sent
-
+bool temperatureInitialized  = false;                           // flag used to initialize the 
+    
 
 //============================================================
 // MQTT CONFIGURATION
 //============================================================
+
+long lastRetry = 0;
 
 // this function is used to receive messages of subscribed topics
 void callback(char* topic, byte* payload, unsigned int length);
@@ -60,9 +64,8 @@ byte server[] = { 192, 168, 1, 129 };
 MQTT client(server, 1883, callback);
 
 // this function is used to receive messages of subscribed topics
-// not going to be used in this case
+// not going to be used in this case, we'll only send data
 void callback(char* topic, byte* payload, unsigned int length) {}
-
 
 
 //============================================================
@@ -109,7 +112,7 @@ void setup()
     while ( !WiFi.ready() )
     {
         // do nothing
-        delay(250);
+        delay( 250 );
     }
 
     Serial.println();
@@ -180,6 +183,17 @@ void loop()
             float tempRead = ( (MSB << 8) | LSB ); //using two's compliment
             float temperature = tempRead / 16;
 
+
+            // put the current temperature in all elementes of the array
+            if ( temperatureInitialized == false )
+            {                
+                for ( int i = 0; i < temperatureManySamples; i++ )
+                {
+                    temperatureSamples[i] = temperature;
+                }
+            }
+
+            temperatureInitialized = true;
 
             // TEMPERATURE AVERAGE
 
