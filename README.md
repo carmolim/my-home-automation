@@ -135,7 +135,7 @@ mqtt:
 
 Here I'll share the code I'm using in my Arduino and Sparks to interact with the MQTT [Components](https://home-assistant.io/components/#all) available in the Home Assistant:
 
-* [MQTT Sensor]()
+* [MQTT Sensor](https://github.com/carmolim/my-home-automation/tree/b2af1560acc529c6db4df9d586847ac89d883e12/Examples/MQTT%20Sensor)
 * MQTT Binary Sensor - work in progress
 * MQTT Switch - work in progress
 
