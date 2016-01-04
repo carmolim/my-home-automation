@@ -1,6 +1,6 @@
 # My DIY Home Automation System
 
-**Hello World!** In this repository I'll document and share my achievements in the developing my DIY Home Automation System. I'll try to be as much detailed as I can that you can to the same thing in your own Home.
+**Hello World!** In this repository I'll document and share my achievements in the developing my DIY Home Automation System. I'll try to be as much detailed as I can so that you can to the same thing in your own Home
 
 ## Used Technologies
 
