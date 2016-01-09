@@ -108,6 +108,15 @@ I started configuring my Raspberry Pi, I had one with me for a time but I never 
 		
 		Press ```CTRL + O``` to write the file, press ```ENTER``` and now ```CTRL + X```  than ```ENTER``` again to close it.
 		
+		Now you need to run 3 more commands:
+		
+		```
+		sudo systemctl --system daemon-reload
+ 		sudo systemctl enable home-assistant
+		sudo systemctl start home-assistant
+		```
+		All set!
+		
 	- If you went with other Linux distribution you can look this [page](https://home-assistant.io/getting-started/autostart/)
 	
 		
