@@ -21,14 +21,15 @@
 //============================================================
 
 const String nodeName       = "spark_01";                       // name of this node
-const String publishTopic   = "home/livingroom/temperature";    // the topic where you will publish the temperature
 const String debugTopic     = "home/debug";                     // this topic is just for debugging
-long _next_time_to_sample   = millis();                         // currently time
-const int loopInterval      = 2000;                             // define how many miliseconds until the nest reading
+unsigned long nextReading   = 0;                                // currently time
+unsigned long nextPublish   = 0;
+const unsigned int readInterval      = 2000;                             // define how many miliseconds until the next reading
+const unsigned int publishInterval   = 1000 * 60;                        // define how many miliseconds until the next message to the broker  
 
 
 //============================================================
-// SENSOR VARIABLES
+// DS18B20 VARIABLES
 //============================================================
 
 // ONE WIRE LIB
@@ -36,23 +37,28 @@ OneWire one = OneWire(D0);                                      // the sensor wi
 uint8_t rom[8];
 uint8_t resp[9];
 
+
 // AVERAGE TEMPERATURE
 const int temperatureManySamples = 5;                           // numbers of samples that will be taken in order to filter the changes
 const float temperatureMinChange = 0.3;                         // the temperature will be uptadted if the change in the reading is bigger than this value
 float temperatureSamples[temperatureManySamples];               // array that will contain the last readings   
-
 int temperatureSamplesStep   = 0;                               // index of the currently temperature reading
 float averageTemperature     = 0;                               // currently temperature average
-float lastAverageTemperature = 0;                               // the last temoerature average sent 
+float lastAverageTemperature = 0;                               // the last temperature average sent 
 float temperatureDifference  = 0.0;                             // the difference between the currently temperature and the last reading sent
-bool temperatureInitialized  = false;                           // flag used to initialize the 
+bool temperatureInitialized  = false;                           // flag used to initialize the array withe the currently value
+
+
+// MQTT
+String temp;                                                    // stores the temperature converted to string
+const String tempPublishTopic = "home/livingroom/temperature";  // the topic where you will publish the temperature
     
 
 //============================================================
 // MQTT CONFIGURATION
 //============================================================
 
-long lastRetry = 0;
+unsigned long lastRetry = 0;
 
 // this function is used to receive messages of subscribed topics
 void callback(char* topic, byte* payload, unsigned int length);
@@ -77,17 +83,16 @@ void setup()
 
     // start serial communication 
     // if your spark core is connected to your computer via USB you can use the Arduino IDE to monitor it
-    Serial.begin(9600);
+    Serial.begin(57600);
 
     Serial.println();
     Serial.print("Node ");
     Serial.print(nodeName);
-    Serial.print("Starting... ");
+    Serial.print(" starting... ");
     Serial.println();
 
     // onboard RGB LED will be used
     RGB.control(true);
-
 
     // setup of the DS18B20 object
     one.reset();
@@ -139,7 +144,7 @@ void loop()
         RGB.color(255, 0, 0);
 
         // connect to MQTT broker
-        if ( client.connect("spark_Carmos_mqtt") )
+        if ( client.connect(nodeName) )
         {
             Serial.println();
             Serial.println("Connecting to the MQTT broker...");
@@ -162,7 +167,7 @@ void loop()
         Serial.println();
 
         // inside your loop
-        if ( millis() > _next_time_to_sample )
+        if ( millis() > nextReading )
         {
 
             // TEMPERATURE READING
@@ -183,7 +188,7 @@ void loop()
             float tempRead = ( (MSB << 8) | LSB ); //using two's compliment
             float temperature = tempRead / 16;
 
-
+            // TODO: always starting with 85º, why?
             // put the current temperature in all elementes of the array
             if ( temperatureInitialized == false )
             {                
@@ -238,7 +243,7 @@ void loop()
                 Serial.println( "==========================================" );
                 String temp( averageTemperature, 2 );
 
-                formatAndPublish( publishTopic, temp );
+                formatAndPublish( tempPublishTopic, temp );
 
                 lastAverageTemperature = averageTemperature;
             }
@@ -260,7 +265,18 @@ void loop()
             }
 
             // do your sample
-            _next_time_to_sample += loopInterval;
+            nextReading += readInterval;
+        }
+
+        // inside your loop
+        if ( millis() > nextPublish )
+        {
+            formatAndPublish( tempPublishTopic, temp );
+
+            lastAverageTemperature = averageTemperature;
+
+            // do your sample
+            nextReading += publishInterval;
         }
     }
 }
